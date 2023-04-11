@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">messenger</string>
     <string name="hello">Ну привет</string>
+    <string name="enter_the_key">Введите ключ шифрования</string>
 </resources>

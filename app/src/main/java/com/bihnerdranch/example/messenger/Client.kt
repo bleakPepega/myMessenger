@@ -10,6 +10,7 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.util.*
+
 @OptIn(DelicateCoroutinesApi::class)
 suspend fun serverHost(): ByteArray? {
     var test = ""
@@ -31,25 +32,43 @@ suspend fun serverHost(): ByteArray? {
     return test.toByteArray()
 }
 @OptIn(InternalAPI::class)
-suspend fun getMessage(combination: MutableList<Byte>) {
+suspend fun getMessage(combination: MutableList<Byte>, id: String) {
     val json = """
         {
             "message": "$combination"
         }
     """
     val client = HttpClient()
-    val response = client.post("http://185.242.107.62:4567/messages") {
+    val response = client.post("http://185.242.107.62:4567/messages/$id") {
         body = json
         contentType(ContentType.Application.Json)
     }
     Log.d("Server Response", "${response.status}")
 }
-suspend fun postMessage(): ByteArray {
+suspend fun postMessage(id: String): List<String> {
     val client = HttpClient()
-    val answer = client.get("http://185.242.107.62:4567/messages").body<String>()
+    val answer = client.get("http://185.242.107.62:4567/messages/$id").body<String>()
+    val test = answer.split("][")
+    return test
+
+}
+suspend fun getingKey(id: String): String {
+    val client = HttpClient()
+    val answer = client.get("http://185.242.107.62:4567/publicKey/$id").body<String>()
+    println(answer)
     return answer
-        .trim('[', ']')
-        .split(", ")
-        .map { it.toByte() }
-        .toByteArray()
+}
+@OptIn(InternalAPI::class)
+suspend fun sendPublicKey(key: String, id: String) {
+    val json = """
+        {
+            "message": "$key"
+        }
+    """
+    val client = HttpClient()
+    val response = client.post("http://185.242.107.62:4567/publicKey/$id") {
+        body = json
+        contentType(ContentType.Application.Json)
+    }
+    Log.d("Server Response", "${response.status}")
 }
