@@ -6,18 +6,20 @@ import android.content.Context
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
 import android.widget.Button
 import android.widget.EditText
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bihnerdranch.example.messenger.HotelContract.GuestEntry
 import com.bihnerdranch.example.messenger.data.DataBase
+import io.ktor.network.sockets.*
 import io.ktor.utils.io.core.*
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import java.security.PrivateKey
 import java.security.PublicKey
 import java.util.*
@@ -37,6 +39,8 @@ class ChatActivity:AppCompatActivity() {
     private lateinit var deleteButton: Button
     private lateinit var getButton: Button
     private lateinit var sendButton: Button
+    private lateinit var context: Context
+    private lateinit var arrayOfKeys: MutableList<String>
     private var id: String = "1"
     @SuppressLint("NotifyDataSetChanged")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -54,20 +58,16 @@ class ChatActivity:AppCompatActivity() {
         messageButton = findViewById(R.id.button_for_send_messages)
         barForMessage = findViewById(R.id.edit_text_for_send_messages)
         testUpdateButton = findViewById(R.id.test_button)
-        deleteButton = findViewById(R.id.deleteDb)
-        sendButton = findViewById(R.id.send_key)
-        getButton = findViewById(R.id.get_key)
 
 //        testButtonForTable = findViewById(R.id.button)
-        val context: Context = applicationContext
-        val arrayOfKeys = AppealToDataBase(context).searchKeyInTable()
+        context = applicationContext
+        arrayOfKeys = AppealToDataBase(context).searchKeyInTable()
         privateKey = MessageEncryption().toPrivateKey(arrayOfKeys[1])!!
         publicKey = MessageEncryption().toPublicKey(arrayOfKeys[0])!!
-        println(arrayOfKeys[0])
         messageButton.setOnClickListener {
             val text = barForMessage.text.toString()
-            myMessges.add(Message(text, Message.Position.RIGHT))
-            adapter.messages.add(Message(text, Message.Position.RIGHT))
+            myMessges.add(Message(text, Message.Position.LEFT))
+            adapter.messages.add(Message(text, Message.Position.LEFT))
             adapter.notifyDataSetChanged()
             val encryptedMessage = encryptMessage(text, publicKey)
             GlobalScope.launch {
@@ -80,29 +80,58 @@ class ChatActivity:AppCompatActivity() {
                 val decodingMessage = updateMessage()
                 delay(500L)
                 runOnUiThread {
-                    decodingMessage.forEach { adapter.messages.add(Message(it, Message.Position.LEFT)) }
+                    decodingMessage.forEach { adapter.messages.add(Message(it, Message.Position.RIGHT)) }
                     adapter.notifyDataSetChanged()
                 }
             }
             Log.d("q", message.toString())
 //            adapter.messages.add(Message(message, Message.Position.RIGHT))
         }
-        deleteButton.setOnClickListener { AppealToDataBase(context).deleteDB() }
-        getButton.setOnClickListener {
-            GlobalScope.launch {
-                Log.d("qqq", publicKey.toString())
-//                val publicKey = getingKey("1").removePrefix("OpenSSLRSAPublicKey{modulus=").removeSuffix(",publicExponent=10001}")
-                val publicKey = getingKey("1")
-                MessageEncryption().toPublicKey(publicKey)
-                    ?.let { it1 -> AppealToDataBase(context).updateValue(arrayOfKeys[0], it1) }
+    }
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.menu_main, menu)
+        return true
+    }
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.action_get_key -> {
+                GlobalScope.launch {
+                    val newPublicKey = getingKey("1")
+                    MessageEncryption().toPublicKey(newPublicKey)
+                        ?.let { it1 -> AppealToDataBase(context).updateValue(arrayOfKeys[0], it1) }
+                    arrayOfKeys = AppealToDataBase(context).searchKeyInTable()
+                    privateKey = MessageEncryption().toPrivateKey(arrayOfKeys[1])!!
+                    publicKey = MessageEncryption().toPublicKey(arrayOfKeys[0])!!
+                }
+                Toast.makeText(this, "Ключ получен", Toast.LENGTH_SHORT).show()
+                true
             }
-        }
-        sendButton.setOnClickListener {
-            GlobalScope.launch {
-                sendPublicKey(arrayOfKeys[0], id)
+            R.id.action_send_key -> {
+                GlobalScope.launch {
+                    sendPublicKey(arrayOfKeys[0], id)
+
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(this@ChatActivity, "Ключ отправлен", Toast.LENGTH_SHORT).show()
+                    }
+                }
+                true
+            }
+            R.id.action_delete -> {
+                AppealToDataBase(context).deleteDB()
+                Toast.makeText(this, "Ключи удалены", Toast.LENGTH_SHORT).show()
+                arrayOfKeys = AppealToDataBase(context).searchKeyInTable()
+                privateKey = MessageEncryption().toPrivateKey(arrayOfKeys[1])!!
+                publicKey = MessageEncryption().toPublicKey(arrayOfKeys[0])!!
+                true
+            }
+            else -> {
+                Toast.makeText(this, "Вот так вот", Toast.LENGTH_SHORT).show()
+
+                super.onOptionsItemSelected(item)
             }
         }
     }
+
 
     private suspend fun sendMessage(newMessages: ByteArray?) {
         val test = mutableListOf<Byte>()
@@ -127,7 +156,7 @@ class ChatActivity:AppCompatActivity() {
 }
 class AppealToDataBase(val context: Context) {
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun insertValue() {
+     fun insertValue() {
         val database = DataBase(context).writableDatabase
         val messageEncryption = MessageEncryption()
         val privateKey = messageEncryption.privateKey

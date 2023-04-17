@@ -26,6 +26,7 @@
         android:layout_marginBottom="16dp"
         android:autofillHints="message"
         android:text="@string/hello"
+
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/button_for_send_messages"
@@ -34,10 +35,10 @@
 
     <Button
         android:id="@+id/button_for_send_messages"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="3dp"
-        android:layout_marginBottom="80dp"
+        android:layout_width="74dp"
+        android:layout_height="55dp"
+        android:layout_marginBottom="4dp"
+        android:background="@drawable/send"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/edit_text_for_send_messages"
@@ -47,8 +48,8 @@
         android:id="@+id/test_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="324dp"
-        android:layout_marginTop="44dp"
+        android:layout_marginStart="320dp"
+        android:layout_marginTop="4dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         tools:ignore="MissingConstraints" />
@@ -63,36 +64,8 @@
     <!--        app:layout_constraintEnd_toEndOf="parent"-->
     <!--        app:layout_constraintTop_toTopOf="parent" />-->
 
-    <Button
-        android:id="@+id/deleteDb"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:layout_marginEnd="13dp"
-        android:text="удалить"
-        app:layout_constraintEnd_toStartOf="@+id/get_key"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:ignore="MissingConstraints" />
 
-    <Button
-        android:id="@+id/send_key"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="send"
-        app:layout_constraintStart_toEndOf="@+id/get_key"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:ignore="MissingConstraints" />
 
-    <Button
-        android:id="@+id/get_key"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="117dp"
-        android:layout_marginEnd="119dp"
-        android:text="get"
-        app:layout_constraintBaseline_toBaselineOf="@+id/send_key"
-        app:layout_constraintEnd_toStartOf="@+id/test_button"
-        app:layout_constraintStart_toStartOf="parent"
-        tools:ignore="MissingConstraints" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>
 
